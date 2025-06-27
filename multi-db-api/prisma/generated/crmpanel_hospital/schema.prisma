@@ -1,0 +1,18 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/crmpanel_hospital"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL_HOSPITAL")
+}
+
+model Hospital {
+  id      Int    @id @default(autoincrement())
+  name    String
+  domain  String
+  db_name String
+}

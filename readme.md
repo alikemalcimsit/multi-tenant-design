@@ -21,3 +21,44 @@
 
 ![alt text]({7BFE4F0C-1766-47D7-ACC4-BCD6F2EB4FFA}.png)
 
+
+
+#########################################################################
+
+##05AA15EA For Controll With Caching System
+
+
+
+import { PrismaClient as HospitalClient } from '../prisma/generated/crmpanel_hospital/index.js'
+import { createClient } from '../prisma/createClient.js'
+
+const hospitalClient = new HospitalClient()
+
+const clientCache = {}
+
+export const domainMiddleware = async (req, res, next) => {
+  const domain = req.headers['x-domain']
+  if (!domain) {
+    return res.status(400).json({ error: 'x-domain header is required' })
+  }
+
+  try {
+    // cache kontrolü
+    if (clientCache[domain]) {
+      req.db = clientCache[domain]
+      return next()
+    }
+
+    const hospital = await hospitalClient.hospital.findFirst({ where: { domain } })
+    if (!hospital) {
+      return res.status(404).json({ error: 'Domain not found' })
+    }
+
+    const client = createClient(hospital.db_name)
+    clientCache[domain] = client
+    req.db = client
+    next()
+  } catch (err) {
+    next(err)
+  }
+}
